@@ -4,9 +4,14 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H6;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,27 +45,52 @@ public class MainView extends VerticalLayout {
      * @param service The message service. Automatically injected Spring managed bean.
      */
     public MainView(@Autowired GreetService service) {
+        VerticalLayout todoslist = new VerticalLayout();
+        TextField taskField = new TextField();
+        Button addButton = new Button("Add");
 
-        // Use TextField for standard text input
-        TextField textField = new TextField("Your name");
-        textField.addThemeName("bordered");
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addButton.addClickShortcut(Key.ENTER);
+        addButton.addClickListener(click -> {
+            Checkbox checkbox = new Checkbox(taskField.getValue());
+            todoslist.add(checkbox);
+        });
 
-        // Button click listeners can be defined as lambda expressions
-        Button button = new Button("Say hello",
-                e -> Notification.show(service.greet(textField.getValue())));
+        ProgressBar pgBar = new ProgressBar(0, 100, 50);
+        pgBar.addClassName("pg-bar");
 
-        // Theme variants give you predefined extra styles for components.
-        // Example: Primary button has a more prominent look.
-        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        HorizontalLayout layoutButton = new HorizontalLayout();
 
-        // You can specify keyboard shortcuts for buttons.
-        // Example: Pressing enter in this view clicks the Button.
-        button.addClickShortcut(Key.ENTER);
+        Button btPlus = new Button("+");
+        Button btMoins = new Button("-");
 
-        // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
-        addClassName("centered-content");
+        layoutButton.add(btMoins, btPlus);
 
-        add(textField, button);
+        btMoins.addClickListener(click -> {
+            pgBar.setValue(pgBar.getValue() - 10);
+            if(pgBar.getValue() <= pgBar.getMin()){
+                pgBar.setValue(pgBar.getMax());
+            }
+        });
+
+        btPlus.addClickListener(click -> {            
+            if(pgBar.getValue() >= pgBar.getMax()){
+                pgBar.setValue(pgBar.getMin());
+            }
+            pgBar.setValue(pgBar.getValue() + 10);
+        });
+
+        H6 txtDetail = new H6("Todo liste d'exemple");
+        txtDetail.addClassName("txtDetail");
+
+        add(
+            new H1("Vaadin Todo"),
+            new Details("Afficher plus", txtDetail),
+            layoutButton,
+            pgBar,
+            todoslist,
+            new HorizontalLayout(taskField, addButton)
+        );
     }
 
 }
